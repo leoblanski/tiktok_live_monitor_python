@@ -8,7 +8,7 @@ import time
 import playsound
 
 # Instância a conexão com o @ do usuário
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@promobot.robots")
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@leoblanskii")
 
 # Usado para fala
 def notifier(text):
@@ -18,10 +18,15 @@ def notifier(text):
     tts.save(filename)
     playsound.playsound(filename)
 
+
 # Executa a conecção
 @client.on("connect")
 async def on_connect(_: ConnectEvent):
     print("Conectado com sucesso a live:", client.room_id)
+
+# @client.on("join")
+# async def on_join(event: JoinEvent):
+#     notifier(f"{event.user.nickname} seja vem vindo a laive.")
 
 # Monitoramento de likes
 
@@ -40,11 +45,10 @@ async def on_gift(event: GiftEvent):
     # If it's type 1 and the streak is over
     if event.gift.gift_type == 1:
         if event.gift.repeat_end == 1:
-            if event.gift.repeat_count == 1:
-                notifier(f"{event.user.nickname} Obrigado pelo {event.gift.repeat_count} presente!")
+            if event.gift.repeat_count == 1 :
+                notifier(f"{event.user.nickname} Obrigado pelos presentes!")
             else: 
-                notifier(f"{event.user.nickname} Obrigado pelos {event.gift.repeat_count} presente!")
-   
+                notifier(f"{event.user.nickname} Obrigadoo pelos presentes, esssssssssquece!!")
     # It's not type 1, which means it can't have a streak & is automatically over
     elif event.gift.gift_type != 1:
         notifier(f"{event.user.nickname} Obrigado pelo presente!")
