@@ -66,27 +66,51 @@ async def on_connect(_: ConnectEvent):
 
 # Monitoramento de likes
 
-# @client.on("like")
-# async def on_like(event: LikeEvent):
-#    print(f"{event.user.nickname} - {event.like.likeCount}!")
+@client.on("like")
+async def on_like(event: LikeEvent):
+    print(f"{event.user.nickname} enviou {event.totalLikeCount} likes")
 
+# Monitoramento de seguidores
 @client.on("follow")
 async def on_follow(event: FollowEvent):
     notifier(f"{event.user.nickname} Seguiu o anfitrião.")
     # mp3Sound(0)
  
-# Monitoramento de 
+# Monitoramento de presentes
 @client.on("gift")
 async def on_gift(event: GiftEvent):
-    # If it's type 1 and the streak is over
+    #Quantidade mínima para alexa falar
+    minimumQty = 1
+
+    #Quantidade mínima para reproduzir o meme
+    minimumQtyMeme = 2
+
+    #Se irá disparar o evento da fala
+    isImportant = event.gift.repeat_count >= minimumQty or event.gift.extended_gift.diamond_count >= minimumQty
+
     if event.gift.gift_type == 1:
-        if event.gift.repeat_end == 1:
-            if event.gift.repeat_count == 1 :
-                notifier(f"{event.user.nickname} Obrigado pelos presentes!")
-            else: 
-                notifier(f"{event.user.nickname} Obrigadoo pelos presentes, esssssssssquece!!")
-    # It's not type 1, which means it can't have a streak & is automatically over
-    elif event.gift.gift_type != 1:
+
+        if event.gift.repeat_end == 1 and (isImportant):
+            conector = "pelo"
+            plural = ""
+            qty = 0
+
+            mustPlaySoundMeme = event.gift.repeat_count >= minimumQtyMeme or event.gift.extended_gift.diamond_count >= minimumQtyMeme
+            
+            if event.gift.extended_gift.name == "Rosa":
+                conector = "pela"
+
+            if event.gift.repeat_count >= minimumQty or event.gift.extended_gift.diamond_count >= minimumQty:
+                plural = "s"
+                qty = event.gift.repeat_count          
+       
+            notifier(f"{event.user.nickname} Obrigado {conector}{plural} {qty} {event.gift.extended_gift.name}{plural}!")
+            
+            #Diz se deve soltar o meme do luva de pedreiro
+            if (mustPlaySoundMeme):
+                mp3Sound(0)
+
+    elif event.gift.gift_type != 1 and event.gift.extended_gift.diamond_count >= 10:
         notifier(f"{event.user.nickname} Obrigado pelo presente!")
 
 

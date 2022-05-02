@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
 
     loop: AbstractEventLoop = asyncio.get_event_loop()
-    client: TikTokLiveClient = TikTokLiveClient("@oldskoldj", loop=loop)
+    client: TikTokLiveClient = TikTokLiveClient("@grk.ff", loop=loop)
     client.add_listener("comment", on_comment)
     display: DisplayCase = DisplayCase(loop)
     loop.create_task(client.start())
