@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Optional
-from pygame
 from TikTokLive.types import User, Gift
 
 

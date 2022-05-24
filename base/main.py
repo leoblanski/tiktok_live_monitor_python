@@ -9,7 +9,7 @@ import playsound
 from sounds import *  
 
 # Instância a conexão com o @ do usuário
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@grk.ff", **(
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@promobot.robots", **(
         {
             # Whether to process initial data (cached chats, etc.)
             "process_initial_data": True,
@@ -79,7 +79,7 @@ async def on_follow(event: FollowEvent):
 # Monitoramento de presentes
 @client.on("gift")
 async def on_gift(event: GiftEvent):
-    #Quantidade mínima para alexa falar
+    #Quantidade mínima para reproduzir a fala
     minimumQty = 1
 
     #Quantidade mínima para reproduzir o meme
@@ -113,6 +113,9 @@ async def on_gift(event: GiftEvent):
     elif event.gift.gift_type != 1 and event.gift.extended_gift.diamond_count >= 10:
         notifier(f"{event.user.nickname} Obrigado pelo presente!")
 
+
+async def saveRegister():
+    print("a")
 
 if __name__ == '__main__':
     # Run the client and block the main thread
