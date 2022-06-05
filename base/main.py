@@ -1,4 +1,5 @@
 import random
+import os
 from TikTokLive import TikTokLiveClient
 from TikTokLive.types.events import *
 
@@ -10,7 +11,7 @@ import playsound
 from sounds import *  
 
 # Instância a conexão com o @ do usuário
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@ojeevaan", **(
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@leoblanskii", **(
         {
             # Whether to process initial data (cached chats, etc.)
             "process_initial_data": True,
@@ -43,24 +44,24 @@ arrayLikes = {}
 
 # Usado para fala da "alexa"
 def notifier(text):
-    print(text)
+    print(f"{text}\n")
     tts = gTTS(text=text, lang='pt')
     filename = 'voice.mp3'
     tts.save(filename)
     playsound.playsound(filename)
 
-# Usado para som
-def mp3Sound(indexSound):
-    #posição do caminho do som no array
-    fileSoundName = sounds_array[indexSound]
+# Usado para som do meme
+def mp3Sound():
+    _random = random.randint(1,4)
 
    # print(fileSoundName)
-    playsound.playsound(fileSoundName)
+    playsound.playsound(f"sound_{_random}.mp3")
 
 
 # Executa a conecção
 @client.on("connect")
 async def on_connect(_: ConnectEvent):
+    os.system("clear")
     print("Conectado com sucesso a live:", client.room_id)
 
 # @client.on("join")
@@ -76,7 +77,8 @@ async def on_like(event: LikeEvent):
     else: 
         arrayLikes[event.user.nickname] = event.likeCount
 
-    print(f"{event.user.nickname} já enviou {arrayLikes[event.user.nickname]} likes")
+    
+    print(f"{event.user.nickname} já enviou {arrayLikes[event.user.nickname]} likes\n")
 
 # Monitoramento de seguidores
 @client.on("follow")
@@ -91,7 +93,6 @@ async def on_follow(event: FollowEvent):
     if (_random == 3):
         notifier(f"Seguido por {event.user.nickname}.")
 
-    f(_random)
     # mp3Sound(0)
  
 # Monitoramento de presentes
@@ -103,6 +104,9 @@ async def on_gift(event: GiftEvent):
     #Quantidade mínima para reproduzir o meme
     minimumQtyMeme = 10
 
+    #Quantidade mínima para reproduzir dizer para seguir
+    minimumSayFollow = 20
+
     #Se irá disparar o evento da fala
     isImportant = event.gift.repeat_count >= minimumQty or event.gift.extended_gift.diamond_count >= minimumQty
 
@@ -113,8 +117,9 @@ async def on_gift(event: GiftEvent):
             plural = ""
             qty = 0
 
-            mustPlaySoundMeme = event.gift.repeat_count >= minimumQtyMeme or event.gift.extended_gift.diamond_count >= minimumQtyMeme
-            
+            mustPlaySoundMeme = event.gift.repeat_count >= minimumQtyMeme or event.gift.extended_gift.diamond_count >= minimumQtyMeme and event.gift.repeat_count < minimumSayFollow 
+            mustFollow = event.gift.repeat_count >= minimumSayFollow 
+
             if event.gift.extended_gift.name == "Rosa":
                 conector = "pela"
 
@@ -124,9 +129,16 @@ async def on_gift(event: GiftEvent):
        
             notifier(f"{event.user.nickname} Obrigado {conector}{plural} {qty} {event.gift.extended_gift.name}{plural}!")
             
-            #Diz se deve soltar o meme do luva de pedreiro
+            #Se deve falar o meme
             if (mustPlaySoundMeme):
-                mp3Sound(0)
+                mp3Sound()
+
+            #Se deve falar para seguir
+            if (mustFollow):
+                notifier(f"Vamos seguir o {event.user.nickname}!")
+
+        if event.gift.repeat_end == 1 and event.gift.repeat_count < minimumQty:
+            print(f"{event.user.nickname} enviou {event.gift.repeat_count}x {event.gift.extended_gift.name}!\n")
 
     elif event.gift.gift_type != 1 and event.gift.extended_gift.diamond_count >= 10:
         notifier(f"{event.user.nickname} Obrigado pelo presente!")
