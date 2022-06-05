@@ -1,3 +1,4 @@
+import random
 from TikTokLive import TikTokLiveClient
 from TikTokLive.types.events import *
 
@@ -9,7 +10,7 @@ import playsound
 from sounds import *  
 
 # Instância a conexão com o @ do usuário
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@promobot.robots", **(
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@ojeevaan", **(
         {
             # Whether to process initial data (cached chats, etc.)
             "process_initial_data": True,
@@ -38,6 +39,8 @@ client: TikTokLiveClient = TikTokLiveClient(unique_id="@promobot.robots", **(
     )
 )
 
+arrayLikes = {}
+
 # Usado para fala da "alexa"
 def notifier(text):
     print(text)
@@ -51,7 +54,7 @@ def mp3Sound(indexSound):
     #posição do caminho do som no array
     fileSoundName = sounds_array[indexSound]
 
-    print(fileSoundName)
+   # print(fileSoundName)
     playsound.playsound(fileSoundName)
 
 
@@ -68,22 +71,37 @@ async def on_connect(_: ConnectEvent):
 
 @client.on("like")
 async def on_like(event: LikeEvent):
-    print(f"{event.user.nickname} enviou {event.totalLikeCount} likes")
+    if (event.user.nickname in arrayLikes) :
+        arrayLikes[event.user.nickname] = arrayLikes[event.user.nickname] + event.likeCount
+    else: 
+        arrayLikes[event.user.nickname] = event.likeCount
+
+    print(f"{event.user.nickname} já enviou {arrayLikes[event.user.nickname]} likes")
 
 # Monitoramento de seguidores
 @client.on("follow")
 async def on_follow(event: FollowEvent):
-    notifier(f"{event.user.nickname} Seguiu o anfitrião.")
+    _random = random.randint(1,3)
+
+    #transfer to swith case
+    if (_random == 1):
+        notifier(f"{event.user.nickname} valeu por seguir!")
+    if (_random == 2):
+        notifier(f"Obrigado {event.user.nickname} por me seguir.")
+    if (_random == 3):
+        notifier(f"Seguido por {event.user.nickname}.")
+
+    f(_random)
     # mp3Sound(0)
  
 # Monitoramento de presentes
 @client.on("gift")
 async def on_gift(event: GiftEvent):
     #Quantidade mínima para reproduzir a fala
-    minimumQty = 1
+    minimumQty = 5
 
     #Quantidade mínima para reproduzir o meme
-    minimumQtyMeme = 2
+    minimumQtyMeme = 10
 
     #Se irá disparar o evento da fala
     isImportant = event.gift.repeat_count >= minimumQty or event.gift.extended_gift.diamond_count >= minimumQty
@@ -114,8 +132,6 @@ async def on_gift(event: GiftEvent):
         notifier(f"{event.user.nickname} Obrigado pelo presente!")
 
 
-async def saveRegister():
-    print("a")
 
 if __name__ == '__main__':
     # Run the client and block the main thread
