@@ -10,6 +10,8 @@ import time
 import playsound
 from sounds import *  
 
+
+
 # Instância a conexão com o @ do usuário
 client: TikTokLiveClient = TikTokLiveClient(unique_id="@leoblanskii", **(
         {
@@ -40,15 +42,35 @@ client: TikTokLiveClient = TikTokLiveClient(unique_id="@leoblanskii", **(
     )
 )
 
+#Quantidade mínima para reproduzir a fala
+minimumQty = 5
+
+#Quantidade mínima para reproduzir o meme
+minimumQtyMeme = 10
+
+#Quantidade mínima para reproduzir dizer para seguir
+minimumSayFollow = 20
+
+
 arrayLikes = {}
 
 # Usado para fala da "alexa"
-def notifier(text):
-    print(f"{text}\n")
+def notifier(text, qty):
+    if (qty >= minimumQty):
+        print(f"""
+╭💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜╮
+ {text}
+╰💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜╯
+        """)
+        playsound.playsound("moedas.mp3")
+    else:
+        print(f"{text}\n")
+
     tts = gTTS(text=text, lang='pt')
     filename = 'voice.mp3'
     tts.save(filename)
     playsound.playsound(filename)
+
 
 # Usado para som do meme
 def mp3Sound():
@@ -56,6 +78,10 @@ def mp3Sound():
 
    # print(fileSoundName)
     playsound.playsound(f"sound_{_random}.mp3")
+
+@client.on("comment")
+async def on_connect(event: CommentEvent):
+    print(f"{event.user.nickname}: {event.comment}\n")
 
 
 # Executa a conecção
@@ -76,7 +102,6 @@ async def on_like(event: LikeEvent):
         arrayLikes[event.user.nickname] = arrayLikes[event.user.nickname] + event.likeCount
     else: 
         arrayLikes[event.user.nickname] = event.likeCount
-
     
     print(f"{event.user.nickname} já enviou {arrayLikes[event.user.nickname]} likes\n")
 
@@ -87,26 +112,17 @@ async def on_follow(event: FollowEvent):
 
     #transfer to swith case
     if (_random == 1):
-        notifier(f"{event.user.nickname} valeu por seguir!")
+        notifier(f"{event.user.nickname} valeu por seguir!", 0)
     if (_random == 2):
-        notifier(f"Obrigado {event.user.nickname} por me seguir.")
+        notifier(f"Obrigado {event.user.nickname} por me seguir.", 0)
     if (_random == 3):
-        notifier(f"Seguido por {event.user.nickname}.")
+        notifier(f"Seguido por {event.user.nickname}.", 0)
 
     # mp3Sound(0)
  
 # Monitoramento de presentes
 @client.on("gift")
 async def on_gift(event: GiftEvent):
-    #Quantidade mínima para reproduzir a fala
-    minimumQty = 5
-
-    #Quantidade mínima para reproduzir o meme
-    minimumQtyMeme = 10
-
-    #Quantidade mínima para reproduzir dizer para seguir
-    minimumSayFollow = 20
-
     #Se irá disparar o evento da fala
     isImportant = event.gift.repeat_count >= minimumQty or event.gift.extended_gift.diamond_count >= minimumQty
 
@@ -127,7 +143,7 @@ async def on_gift(event: GiftEvent):
                 plural = "s"
                 qty = event.gift.repeat_count          
        
-            notifier(f"{event.user.nickname} Obrigado {conector}{plural} {qty} {event.gift.extended_gift.name}{plural}!")
+            notifier(f"{event.user.nickname} Obrigado {conector}{plural} {qty} {event.gift.extended_gift.name}{plural}!", qty)
             
             #Se deve falar o meme
             if (mustPlaySoundMeme):
@@ -135,15 +151,28 @@ async def on_gift(event: GiftEvent):
 
             #Se deve falar para seguir
             if (mustFollow):
-                notifier(f"Vamos seguir o {event.user.nickname}!")
+                notifier(f"Vamos seguir o {event.user.nickname}!", qty)
 
         if event.gift.repeat_end == 1 and event.gift.repeat_count < minimumQty:
-            print(f"{event.user.nickname} enviou {event.gift.repeat_count}x {event.gift.extended_gift.name}!\n")
+            print(f"""
+╭💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜╮
+ {event.user.nickname} enviou {event.gift.repeat_count}x {event.gift.extended_gift.name}!
+╰💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜╯\n
+""")
 
     elif event.gift.gift_type != 1 and event.gift.extended_gift.diamond_count >= 10:
-        notifier(f"{event.user.nickname} Obrigado pelo presente!")
+        notifier(f"{event.user.nickname} Obrigado pelo presente!", event.gift.extended_gift.diamond_count)
 
 
+@client.on("error")
+async def on_connect(error: Exception):
+    # Handle the error
+    if isinstance(error, Exception):
+        print("Notificando telespectadores")
+        return
+
+    # Otherwise, log the error
+    client._log_error(error)
 
 if __name__ == '__main__':
     # Run the client and block the main thread
