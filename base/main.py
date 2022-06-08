@@ -90,12 +90,7 @@ async def on_connect(_: ConnectEvent):
     os.system("clear")
     print("Conectado com sucesso a live:", client.room_id)
 
-# @client.on("join")
-# async def on_join(event: JoinEvent):
-#     notifier(f"{event.user.nickname} seja vem vindo a laive.")
-
 # Monitoramento de likes
-
 @client.on("like")
 async def on_like(event: LikeEvent):
     if (event.user.nickname in arrayLikes) :
