@@ -8,12 +8,13 @@ from gtts import gTTS
 import os
 import time
 import playsound
+import requests
+from http.client import HTTPConnection  # py3
+import logging
 from sounds import *  
 
-
-
 # Instância a conexão com o @ do usuário
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@leoblanskii", **(
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@7rexdino", **(
         {
             # Whether to process initial data (cached chats, etc.)
             "process_initial_data": True,
@@ -43,7 +44,7 @@ client: TikTokLiveClient = TikTokLiveClient(unique_id="@leoblanskii", **(
 )
 
 #Quantidade mínima para reproduzir a fala
-minimumQty = 5
+minimumQty = 1
 
 #Quantidade mínima para reproduzir o meme
 minimumQtyMeme = 10
@@ -51,17 +52,33 @@ minimumQtyMeme = 10
 #Quantidade mínima para reproduzir dizer para seguir
 minimumSayFollow = 20
 
-
 arrayLikes = {}
 
+#utilizado para logs
+def logPrint():
+    log = logging.getLogger('urllib3')
+    log.setLevel(logging.DEBUG)
+
+    # logging from urllib3 to console
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    log.addHandler(ch)
+
+# print statements from `http.client.HTTPConnection` to console/stdout
+HTTPConnection.debuglevel = 0
+
+#Utilizado para enviar a informação para API
+def saveApiMoviment(params):
+    apiPath = "http://0.0.0.0:8000/api/"
+
+    response = requests.post("http://0.0.0.0:8000/api/saveMoviment", json=params)
+
+    print('Registrado movimentação na API')
+
 # Usado para fala da "alexa"
-def notifier(text, qty):
+def notifier(text, qty, diamonds, username):
     if (qty >= minimumQty):
-        print(f"""
-╭💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜╮
- {text}
-╰💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜╯
-        """)
+        print(f"{text}")
         playsound.playsound("moedas.mp3")
     else:
         print(f"{text}\n")
@@ -70,6 +87,14 @@ def notifier(text, qty):
     filename = 'voice.mp3'
     tts.save(filename)
     playsound.playsound(filename)
+
+    params = {
+        'username': username,
+        'qty_gift': qty,
+        'amount': diamonds
+    }
+
+    saveApiMoviment(params)
 
 
 # Usado para som do meme
@@ -107,11 +132,11 @@ async def on_follow(event: FollowEvent):
 
     #transfer to swith case
     if (_random == 1):
-        notifier(f"{event.user.nickname} valeu por seguir!", 0)
+        notifier(f"{event.user.nickname} valeu por seguir!", 0, 0)
     if (_random == 2):
-        notifier(f"Obrigado {event.user.nickname} por me seguir.", 0)
+        notifier(f"Obrigado {event.user.nickname} por me seguir.", 0, 0)
     if (_random == 3):
-        notifier(f"Seguido por {event.user.nickname}.", 0)
+        notifier(f"Seguido por {event.user.nickname}.", 0, 0)
 
     # mp3Sound(0)
  
@@ -138,7 +163,7 @@ async def on_gift(event: GiftEvent):
                 plural = "s"
                 qty = event.gift.repeat_count          
        
-            notifier(f"{event.user.nickname} Obrigado {conector}{plural} {qty} {event.gift.extended_gift.name}{plural}!", qty)
+            notifier(f"{event.user.nickname} Obrigado {conector}{plural} {qty} {event.gift.extended_gift.name}{plural}!", qty, event.gift.extended_gift.diamond_count, event.user.uniqueId)
             
             #Se deve falar o meme
             if (mustPlaySoundMeme):
@@ -146,17 +171,13 @@ async def on_gift(event: GiftEvent):
 
             #Se deve falar para seguir
             if (mustFollow):
-                notifier(f"Vamos seguir o {event.user.nickname}!", qty)
+                notifier(f"Vamos seguir o {event.user.nickname}!", qty, event.gift.extended_gift.diamond_count, event.user.uniqueId)
 
         if event.gift.repeat_end == 1 and event.gift.repeat_count < minimumQty:
-            print(f"""
-╭💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜╮
- {event.user.nickname} enviou {event.gift.repeat_count}x {event.gift.extended_gift.name}!
-╰💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜💜╯\n
-""")
+            print(f"{event.user.nickname} enviou {event.gift.repeat_count}x {event.gift.extended_gift.name}")
 
     elif event.gift.gift_type != 1 and event.gift.extended_gift.diamond_count >= 10:
-        notifier(f"{event.user.nickname} Obrigado pelo presente!", event.gift.extended_gift.diamond_count)
+        notifier(f"{event.user.nickname} Obrigado pelo presente!", event.gift.extended_gift.diamond_count, event.gift.extended_gift.diamond_count, event.user.uniqueId)
 
 
 @client.on("error")
