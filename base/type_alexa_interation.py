@@ -13,41 +13,14 @@ from http.client import HTTPConnection  # py3
 import logging
 from sounds import *  
 
-# Instância a conexão com o @ do usuário
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@7rexdino", **(
-        {
-            # Whether to process initial data (cached chats, etc.)
-            "process_initial_data": True,
-
-            # Connect info (viewers, stream status, etc.)
-            "fetch_room_info_on_connect": True,
-
-            # Whether to get extended gift info (Image URLs, etc.)
-            "enable_extended_gift_info": True,
-
-            # How frequently to poll Webcast API
-            "polling_interval_ms": 1000,
-
-            # Custom Client params
-            "client_params": {},
-
-            # Custom request headers
-            "headers": {},
-
-            # Custom timeout for Webcast API requests
-            "timeout_ms": 1000,
-
-            # Set the language for Webcast responses (Changes extended_gift's language)
-            "lang": "pt-BR"
-        }
-    )
-)
+# Instantiate the client with the user's username
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@ofc_akino")
 
 #Quantidade mínima para reproduzir a fala
 minimumQty = 1
 
 #Quantidade mínima para reproduzir o meme
-minimumQtyMeme = 10
+minimumQtyMeme = 5
 
 #Quantidade mínima para reproduzir dizer para seguir
 minimumSayFollow = 20
@@ -69,9 +42,9 @@ HTTPConnection.debuglevel = 0
 
 #Utilizado para enviar a informação para API
 def saveApiMoviment(params):
-    apiPath = "http://0.0.0.0:8000/api/"
+    apiPath = "http://localhost:8989/api/"
 
-    response = requests.post("http://0.0.0.0:8000/api/saveMoviment", json=params)
+    response = requests.post("http://localhost:8989/api/saveMoviment", json=params)
 
     print('Registrado movimentação na API')
 
@@ -97,6 +70,27 @@ def notifier(text, qty, diamonds, username):
     saveApiMoviment(params)
 
 
+# Usado para fala da "alexa"
+def saveVote(text, qty, diamonds, username, picture):
+    if (qty >= minimumQty):
+        print(f"{text}")
+        playsound.playsound("moedas.mp3")
+    else:
+        print(f"{text}\n")
+
+    tts = gTTS(text=text, lang='pt')
+    filename = 'voice.mp3'
+    tts.save(filename)
+    playsound.playsound(filename)
+
+    params = {
+        'username': username,
+        'qty_gift': qty,
+        'amount': diamonds
+    }
+
+    saveApiMoviment(params)
+
 # Usado para som do meme
 def mp3Sound():
     _random = random.randint(1,4)
@@ -105,9 +99,8 @@ def mp3Sound():
     playsound.playsound(f"sound_{_random}.mp3")
 
 @client.on("comment")
-async def on_connect(event: CommentEvent):
+async def on_comment(event: CommentEvent):
     print(f"{event.user.nickname}: {event.comment}\n")
-
 
 # Executa a conecção
 @client.on("connect")
@@ -179,6 +172,11 @@ async def on_gift(event: GiftEvent):
     elif event.gift.gift_type != 1 and event.gift.extended_gift.diamond_count >= 10:
         notifier(f"{event.user.nickname} Obrigado pelo presente!", event.gift.extended_gift.diamond_count, event.gift.extended_gift.diamond_count, event.user.uniqueId)
 
+# Define handling an event via "callback"
+client.add_listener("comment", on_comment)
+client.add_listener("like", on_like)
+client.add_listener("follow", on_follow)
+client.add_listener("gift", on_gift)
 
 @client.on("error")
 async def on_connect(error: Exception):
