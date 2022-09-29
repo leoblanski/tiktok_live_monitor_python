@@ -14,7 +14,9 @@ import logging
 from sounds import *  
 
 # Instantiate the client with the user's username
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@ofc_akino")
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@iasmiin9", **({
+    "lang": "pt-BR",
+}))
 
 #Quantidade mínima para reproduzir a fala
 minimumQty = 1
@@ -23,7 +25,7 @@ minimumQty = 1
 minimumQtyMeme = 5
 
 #Quantidade mínima para reproduzir dizer para seguir
-minimumSayFollow = 20
+minimumSayFollow = 10
 
 arrayLikes = {}
 
@@ -146,7 +148,7 @@ async def on_gift(event: GiftEvent):
             plural = ""
             qty = 0
 
-            mustPlaySoundMeme = event.gift.repeat_count >= minimumQtyMeme or event.gift.extended_gift.diamond_count >= minimumQtyMeme and event.gift.repeat_count < minimumSayFollow 
+            mustPlaySoundMeme = event.gift.repeat_count >= minimumQtyMeme or event.gift.extended_gift.diamond_count >= minimumQtyMeme and event.gift.repeat_count < minimumSayFollow and 1 == 2 #teste
             mustFollow = event.gift.repeat_count >= minimumSayFollow 
 
             if event.gift.extended_gift.name == "Rosa":
